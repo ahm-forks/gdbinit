@@ -85,8 +85,6 @@ set startup-with-shell off
 
 set confirm off
 set verbose off
-set history filename ~/.gdb_history
-set history save
 
 set output-radix 0x10
 set input-radix 0x10
@@ -189,14 +187,16 @@ define color_underline
     end
 end
 
-# create ~/.gdbinit.local if file not present
-# suppresses any warning about not finding the file
-shell if ! test -f ~/.gdbinit.local; then touch ~/.gdbinit.local; fi
+python
+import os
+cfg = os.path.join(os.getenv('XDG_CONFIG_HOME', os.path.expanduser('~/.config')), 'gdb', 'gdbinit.local')
+hst = os.path.join(os.getenv('XDG_STATE_HOME', os.path.expanduser('~/.local/state')), 'gdb', 'history')
 
-# this way anyone can have their custom prompt - argp's idea :-)
-# can also be used to redefine anything else in particular the colors aka theming
-# just remap the color variables defined above
-source ~/.gdbinit.local
+gdb.execute(f"set history save on")
+gdb.execute(f"set history filename {hst}")
+if os.path.isfile(cfg):
+    gdb.execute(f"source {cfg}")
+end
 
 # can't use the color functions because we are using the set command
 if $COLOREDPROMPT == 1
